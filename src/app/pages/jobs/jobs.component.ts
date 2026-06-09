@@ -545,9 +545,7 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   /** Filter tab configuration — dynamically set based on worker type */
   filterTabs: { label: string; value: JobFilter }[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Shopper', value: 'shopper' },
-    { label: 'Driver', value: 'driver' },
+    { label: 'All Jobs', value: 'all' },
   ];
 
   /** Skeleton placeholder count */
@@ -584,22 +582,21 @@ export class JobsComponent implements OnInit, OnDestroy {
           this.isOnline = true;
 
           // Set default filter based on worker type (shopper/driver)
-          const workerType = worker.workerType as JobFilter;
-          if (workerType === 'shopper' || workerType === 'driver') {
-            this.store.dispatch(JobsActions.setFilter({ filter: workerType }));
+          const workerType = (worker.workerType || 'shopper') as JobFilter;
+          console.log('[Jobs] Worker type:', workerType);
 
-            // Configure visible tabs based on worker type
-            if (workerType === 'shopper') {
-              this.filterTabs = [
-                { label: 'All', value: 'shopper' },
-                { label: 'Shopper', value: 'shopper' },
-              ];
-            } else if (workerType === 'driver') {
-              this.filterTabs = [
-                { label: 'All', value: 'driver' },
-                { label: 'Driver', value: 'driver' },
-              ];
-            }
+          // Always filter by worker type — dispatch filter
+          this.store.dispatch(JobsActions.setFilter({ filter: workerType }));
+
+          // Configure visible tabs based on worker type
+          if (workerType === 'shopper') {
+            this.filterTabs = [
+              { label: 'All Shopper Jobs', value: 'shopper' },
+            ];
+          } else if (workerType === 'driver') {
+            this.filterTabs = [
+              { label: 'All Driver Jobs', value: 'driver' },
+            ];
           }
 
           this.initializeOnlineMode();
