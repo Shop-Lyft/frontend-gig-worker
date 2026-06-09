@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "shoplift-gig-worker-6e55f-37ae9",
+    "public": "dist/shoplyft-gig/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
+}
