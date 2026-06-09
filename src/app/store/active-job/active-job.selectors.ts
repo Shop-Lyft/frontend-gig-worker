@@ -1,7 +1,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { ActiveJobState } from './active-job.reducer';
 
-export const selectActiveJobState = createFeatureSelector<ActiveJobState>('activeJob');
+export const selectActiveJobState = createFeatureSelector<ActiveJobState>('active-job');
 
 export const selectActiveJob = createSelector(
   selectActiveJobState,
