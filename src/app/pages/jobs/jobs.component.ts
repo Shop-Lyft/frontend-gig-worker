@@ -109,20 +109,6 @@ import { PushNotificationService } from '../../core/services/push-notification.s
         </div>
       }
 
-      <!-- Filter Tabs -->
-      <nav class="filter-tabs" aria-label="Job type filter">
-        @for (tab of filterTabs; track tab.value) {
-          <button
-            class="filter-tab"
-            [class.active]="(activeFilter$ | async) === tab.value"
-            (click)="onFilterChange(tab.value)"
-            [attr.aria-pressed]="(activeFilter$ | async) === tab.value"
-          >
-            {{ tab.label }}
-          </button>
-        }
-      </nav>
-
       <!-- Content Area -->
       <section class="jobs-content">
         @if ((loading$ | async) === true && jobsList === null) {

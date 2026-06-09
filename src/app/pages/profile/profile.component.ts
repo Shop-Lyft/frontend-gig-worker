@@ -9,6 +9,7 @@ import { SkeletonLoaderComponent, ErrorRetryComponent } from '../../shared/compo
 import { WorkerProfile, ProfileUpdate } from '../../core/models/worker.model';
 import { validateProfileUpdate } from '../../core/utils/validation.utils';
 import * as ProfileActions from '../../store/profile/profile.actions';
+import * as AuthActions from '../../store/auth/auth.actions';
 import {
   selectProfileData,
   selectProfileLoading,
@@ -193,6 +194,16 @@ import {
               </svg>
             </a>
           </nav>
+
+          <!-- Sign Out -->
+          <button class="sign-out-btn" (click)="onSignOut()">
+            <svg class="sign-out-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign Out
+          </button>
         }
       }
     </div>
@@ -363,6 +374,34 @@ import {
       margin-left: auto;
       color: #64748b;
     }
+
+    .sign-out-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      color: #ef4444;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      min-height: 48px;
+    }
+
+    .sign-out-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .sign-out-icon {
+      width: 20px;
+      height: 20px;
+    }
   `],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -456,6 +495,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   onLoadRetry(): void {
     this.store.dispatch(ProfileActions.loadProfile());
+  }
+
+  onSignOut(): void {
+    this.store.dispatch(AuthActions.logout());
   }
 
   private initForm(): void {
