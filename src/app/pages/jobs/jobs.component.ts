@@ -585,6 +585,11 @@ export class JobsComponent implements OnInit, OnDestroy {
             ];
           }
 
+          // Dispatch loadJobs after a tick to ensure filter is set in store
+          setTimeout(() => {
+            this.store.dispatch(JobsActions.loadJobs());
+          }, 50);
+
           this.initializeOnlineMode();
         }
       });
