@@ -242,7 +242,14 @@ export class GigWorkerFirebaseService implements GigWorkerService {
             })
           ).pipe(
             switchMap(() => from(getDoc(jobDocRef))),
-            map((updatedSnap) => this.mapJob(jobId, updatedSnap.data()!))
+            map((updatedSnap) => {
+              const jobData = updatedSnap.data()!;
+              // Propagate status to the order: shopper accepted → order is being picked
+              if (jobData['orderId']) {
+                updateDoc(doc(this.db, 'orders', jobData['orderId']), { status: 'being_picked' });
+              }
+              return this.mapJob(jobId, jobData);
+            })
           );
         })
       );
@@ -351,6 +358,11 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           // Update the shopper job to 'picked'
           return from(updateDoc(jobDocRef, { status: 'picked' })).pipe(
             switchMap(() => {
+              // Propagate status to the order: all items picked → in delivery (driver job being created)
+              if (jobData && jobData['orderId']) {
+                updateDoc(doc(this.db, 'orders', jobData['orderId']), { status: 'in_delivery' });
+              }
+
               // If this is a shopper job, create a corresponding driver job
               if (jobData && jobData['jobType'] === 'shopper') {
                 const driverJobId = `job_${jobData['orderId']}_driver`;
@@ -396,6 +408,11 @@ export class GigWorkerFirebaseService implements GigWorkerService {
             updateDoc(jobDocRef, {
               status: 'delivered',
               completedAt: Timestamp.now(),
+            })
+          ).pipe(
+            switchMap(() => {
+              // Propagate status to the order: delivery complete
+              return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }));
             })
           );
         })

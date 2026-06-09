@@ -543,8 +543,8 @@ export class JobsComponent implements OnInit, OnDestroy {
   /** Timer ref for highlight auto-remove */
   private highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  /** Filter tab configuration */
-  readonly filterTabs: { label: string; value: JobFilter }[] = [
+  /** Filter tab configuration — dynamically set based on worker type */
+  filterTabs: { label: string; value: JobFilter }[] = [
     { label: 'All', value: 'all' },
     { label: 'Shopper', value: 'shopper' },
     { label: 'Driver', value: 'driver' },
@@ -582,6 +582,26 @@ export class JobsComponent implements OnInit, OnDestroy {
       .subscribe((worker) => {
         if (worker) {
           this.isOnline = true;
+
+          // Set default filter based on worker type (shopper/driver)
+          const workerType = worker.workerType as JobFilter;
+          if (workerType === 'shopper' || workerType === 'driver') {
+            this.store.dispatch(JobsActions.setFilter({ filter: workerType }));
+
+            // Configure visible tabs based on worker type
+            if (workerType === 'shopper') {
+              this.filterTabs = [
+                { label: 'All', value: 'shopper' },
+                { label: 'Shopper', value: 'shopper' },
+              ];
+            } else if (workerType === 'driver') {
+              this.filterTabs = [
+                { label: 'All', value: 'driver' },
+                { label: 'Driver', value: 'driver' },
+              ];
+            }
+          }
+
           this.initializeOnlineMode();
         }
       });
