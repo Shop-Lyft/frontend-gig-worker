@@ -730,10 +730,21 @@ export class GigWorkerFirebaseService implements GigWorkerService {
       distance: data['distance'] || undefined,
       customerAddress: data['customerAddress'] || undefined,
       customerPhone: data['customerPhone'] || undefined,
-      createdAt: data['createdAt']
-        ? (data['createdAt'] as Timestamp).toDate().toISOString()
-        : new Date().toISOString(),
+      createdAt: this.parseTimestamp(data['createdAt']),
     };
+  }
+
+  /**
+   * Safely parse a Firestore Timestamp or ISO string to an ISO string.
+   * Handles both Firestore Timestamp objects (with .toDate()) and plain strings.
+   */
+  private parseTimestamp(value: any): string {
+    if (!value) return new Date().toISOString();
+    if (typeof value === 'string') return value;
+    if (value.toDate && typeof value.toDate === 'function') {
+      return value.toDate().toISOString();
+    }
+    return new Date().toISOString();
   }
 
   private mapPickItem(id: string, data: DocumentData): PickItem {
@@ -743,7 +754,7 @@ export class GigWorkerFirebaseService implements GigWorkerService {
       quantity: data['quantity'] || 1,
       status: data['status'] || 'pending',
       checkedAt: data['checkedAt']
-        ? (data['checkedAt'] as Timestamp).toDate().toISOString()
+        ? this.parseTimestamp(data['checkedAt'])
         : undefined,
     };
   }

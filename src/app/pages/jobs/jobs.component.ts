@@ -109,19 +109,6 @@ import { PushNotificationService } from '../../core/services/push-notification.s
         </div>
       }
 
-      <!-- Availability Toggle -->
-      <section class="availability-section">
-        <app-availability-toggle
-          [available]="isOnline"
-          [disabled]="(hasActiveJob$ | async) === true"
-          [loading]="availabilityLoading"
-          (toggle)="onAvailabilityToggle($event)"
-        ></app-availability-toggle>
-        @if ((hasActiveJob$ | async) === true) {
-          <p class="active-job-warning">Cannot change availability during an active job</p>
-        }
-      </section>
-
       <!-- Filter Tabs -->
       <nav class="filter-tabs" aria-label="Job type filter">
         @for (tab of filterTabs; track tab.value) {
@@ -151,18 +138,6 @@ import { PushNotificationService } from '../../core/services/push-notification.s
             [message]="errorMessage"
             (retry)="onRetry()"
           ></app-error-retry>
-        } @else if (!isOnline) {
-          <!-- Offline Empty State -->
-          <div class="empty-state" role="status">
-            <div class="empty-icon offline-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-              </svg>
-            </div>
-            <h2 class="empty-title">You're offline</h2>
-            <p class="empty-message">Go online to see available jobs</p>
-          </div>
         } @else if (gpsPermissionDenied) {
           <!-- No GPS Empty State -->
           <div class="empty-state" role="status">
@@ -551,7 +526,7 @@ export class JobsComponent implements OnInit, OnDestroy {
   /** Local component state synced from observables for template use */
   jobsList: Job[] | null = null;
   errorMessage: string | null = null;
-  isOnline = false;
+  isOnline = true; // Workers are always online when logged in
   availabilityLoading = false;
   gpsPermissionDenied = false;
   acceptingJobId: string | null = null;
@@ -600,16 +575,14 @@ export class JobsComponent implements OnInit, OnDestroy {
         this.errorMessage = error?.message ?? null;
       });
 
-    // Get initial availability from worker profile
+    // Worker is always online when logged in — initialize immediately
     this.store
       .select(selectWorker)
       .pipe(takeUntil(this.destroy$))
       .subscribe((worker) => {
         if (worker) {
-          this.isOnline = worker.available;
-          if (this.isOnline) {
-            this.initializeOnlineMode();
-          }
+          this.isOnline = true;
+          this.initializeOnlineMode();
         }
       });
 
