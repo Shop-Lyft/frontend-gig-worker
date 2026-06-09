@@ -8,7 +8,7 @@ import { catchError, exhaustMap, map, switchMap, tap, withLatestFrom } from 'rxj
 import { GIG_WORKER_SERVICE } from '../../core/services/gig-worker.service';
 import { isCacheStale } from '../../core/utils/staleness.utils';
 import * as JobsActions from './jobs.actions';
-import { selectLastFetchedAt } from './jobs.selectors';
+import { selectActiveFilter, selectLastFetchedAt } from './jobs.selectors';
 
 export const loadJobsEffect = createEffect(
   (
@@ -18,8 +18,9 @@ export const loadJobsEffect = createEffect(
   ) => {
     return actions$.pipe(
       ofType(JobsActions.loadJobs, JobsActions.loadJobsBackground),
-      switchMap(() =>
-        gigService.getAvailableJobs().pipe(
+      withLatestFrom(store.select(selectActiveFilter)),
+      switchMap(([_, filter]) =>
+        gigService.getAvailableJobs(filter).pipe(
           map((jobs) => JobsActions.loadJobsSuccess({ jobs })),
           catchError((error) =>
             of(
