@@ -43,3 +43,9 @@ export const tokenExpired = createAction('[Auth] Token Expired');
 
 // Clear Error
 export const clearError = createAction('[Auth] Clear Error');
+
+// Session Restore (on page refresh)
+export const restoreSession = createAction(
+  '[Auth] Restore Session',
+  props<{ token: string; worker: WorkerProfile }>()
+);

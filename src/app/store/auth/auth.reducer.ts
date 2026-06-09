@@ -102,4 +102,16 @@ export const authReducer = createReducer(
     ...state,
     loginError: null,
   })),
+
+  // Restore Session (page refresh)
+  on(AuthActions.restoreSession, (state, { token, worker }): AuthState => ({
+    ...state,
+    worker,
+    token,
+    isAuthenticated: true,
+    loginLoading: false,
+    loginError: null,
+    loginAttempts: 0,
+    lockoutUntil: null,
+  })),
 );

@@ -73,10 +73,12 @@ export const logoutEffect = createEffect(
         gigWorkerService.logout().pipe(
           map(() => {
             localStorage.removeItem('gig_auth_token');
+            localStorage.removeItem('gig_worker_profile');
             return AuthActions.logoutSuccess();
           }),
           catchError(() => {
             localStorage.removeItem('gig_auth_token');
+            localStorage.removeItem('gig_worker_profile');
             return of(AuthActions.logoutSuccess());
           }),
         ),
@@ -93,8 +95,9 @@ export const loginSuccessEffect = createEffect(
   ) => {
     return actions$.pipe(
       ofType(AuthActions.loginSuccess),
-      tap(({ token }) => {
+      tap(({ token, worker }) => {
         localStorage.setItem('gig_auth_token', token);
+        localStorage.setItem('gig_worker_profile', JSON.stringify(worker));
         router.navigate(['/jobs']);
       }),
     );
@@ -109,8 +112,9 @@ export const registerSuccessEffect = createEffect(
   ) => {
     return actions$.pipe(
       ofType(AuthActions.registerSuccess),
-      tap(({ token }) => {
+      tap(({ token, worker }) => {
         localStorage.setItem('gig_auth_token', token);
+        localStorage.setItem('gig_worker_profile', JSON.stringify(worker));
         // Clear the push prompted flag so the push prompt shows on first login after registration
         localStorage.removeItem('gig_push_prompted');
         router.navigate(['/jobs']);
@@ -144,6 +148,7 @@ export const tokenExpiredEffect = createEffect(
       ofType(AuthActions.tokenExpired),
       tap(() => {
         localStorage.removeItem('gig_auth_token');
+        localStorage.removeItem('gig_worker_profile');
         router.navigate(['/auth/login']);
       }),
     );
