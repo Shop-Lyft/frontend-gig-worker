@@ -287,9 +287,30 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           const jobId = jobSnapshot.docs[0].id;
           const picklistRef = collection(this.db, 'jobs', jobId, 'picklist');
           return from(getDocs(picklistRef)).pipe(
-            map((snapshot) =>
-              snapshot.docs.map((docSnap) => this.mapPickItem(docSnap.id, docSnap.data()))
-            )
+            switchMap((snapshot) => {
+              // If the picklist subcollection has items, use them
+              if (!snapshot.empty) {
+                return of(
+                  snapshot.docs.map((docSnap) => this.mapPickItem(docSnap.id, docSnap.data()))
+                );
+              }
+              // Fallback: read items directly from the order document
+              const orderDocRef = doc(this.db, 'orders', orderId);
+              return from(getDoc(orderDocRef)).pipe(
+                map((orderSnap) => {
+                  if (!orderSnap.exists()) return [];
+                  const orderData = orderSnap.data();
+                  const items: any[] = orderData['items'] || [];
+                  return items.map((item, index) => ({
+                    id: item.productId || `item_${index}`,
+                    productName: item.name || item.productName || 'Unknown Item',
+                    quantity: item.quantity || 1,
+                    status: 'pending' as const,
+                    checkedAt: undefined,
+                  }));
+                })
+              );
+            })
           );
         })
       );
@@ -312,7 +333,9 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           if (status === 'picked') {
             updateData['checkedAt'] = Timestamp.now();
           }
-          return from(updateDoc(itemRef, updateData));
+          // Use setDoc with merge to handle cases where the picklist subcollection
+          // doc doesn't exist yet (fallback from order items)
+          return from(setDoc(itemRef, updateData, { merge: true }));
         })
       );
     });
