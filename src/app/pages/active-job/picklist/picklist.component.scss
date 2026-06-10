@@ -1,0 +1,267 @@
+.picklist-container {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .picklist-header {
+      margin-bottom: 16px;
+    }
+
+    .order-number {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 4px;
+    }
+
+    .mode-label {
+      font-size: 14px;
+      color: #94a3b8;
+      margin: 0 0 8px;
+    }
+
+    .gps-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 12px;
+    }
+
+    .gps-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .gps-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: #10b981;
+    }
+
+    .actions-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .call-customer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      min-height: 44px;
+      background: #1e293b;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+
+    .call-customer-btn:hover {
+      background: #334155;
+    }
+
+    .call-customer-btn.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .call-customer-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px;
+      color: #94a3b8;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(148, 163, 184, 0.3);
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 24px;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 14px;
+      margin: 0 0 12px;
+    }
+
+    .retry-btn {
+      min-height: 44px;
+      padding: 10px 20px;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      background: transparent;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .retry-btn:hover {
+      background: #1e293b;
+    }
+
+    .pick-items {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pick-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid #1e293b;
+      min-height: 44px;
+    }
+
+    .pick-item:last-child {
+      border-bottom: none;
+    }
+
+    .pick-item.skipped {
+      opacity: 0.5;
+    }
+
+    .pick-item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
+    .pick-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: #10b981;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .pick-checkbox:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .pick-item-text {
+      font-size: 15px;
+      color: #ffffff;
+      transition: text-decoration 0.2s ease, color 0.2s ease;
+    }
+
+    .pick-item-text.strikethrough {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-pending {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+
+    .badge-rejected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .badge-timeout {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+    }
+
+    .substitute-link {
+      background: none;
+      border: none;
+      color: #60a5fa;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 8px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s ease;
+    }
+
+    .substitute-link:hover {
+      color: #93c5fd;
+    }
+
+    .mark-all-container {
+      padding: 16px 0;
+      margin-top: 8px;
+    }
+
+    .mark-all-btn {
+      width: 100%;
+      min-height: 48px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, opacity 0.2s ease;
+      background: #94a3b8;
+      color: #ffffff;
+      opacity: 0.6;
+    }
+
+    .mark-all-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .mark-all-btn.enabled {
+      background: #10b981;
+      opacity: 1;
+    }
+
+    .mark-all-btn.enabled:hover {
+      background: #059669;
+    }

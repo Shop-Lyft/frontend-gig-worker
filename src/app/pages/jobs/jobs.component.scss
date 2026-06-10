@@ -1,0 +1,313 @@
+.jobs-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    /* Availability Section */
+    .availability-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .active-job-warning {
+      font-size: 12px;
+      color: #f59e0b;
+      margin: 0;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 4px;
+      background: #1e293b;
+      border-radius: 10px;
+    }
+
+    .filter-tab {
+      flex: 1;
+      min-height: 44px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .filter-tab.active {
+      background: #10b981;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .filter-tab:not(.active):hover {
+      background: rgba(148, 163, 184, 0.1);
+    }
+
+    /* Content Area */
+    .jobs-content {
+      flex: 1;
+    }
+
+    /* Skeleton list */
+    .skeleton-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Empty States */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-bottom: 16px;
+    }
+
+    .empty-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .offline-icon {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+    }
+
+    .gps-icon {
+      background: rgba(245, 158, 11, 0.1);
+      color: #f59e0b;
+    }
+
+    .no-jobs-icon {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0 0 8px;
+    }
+
+    .empty-message {
+      font-size: 14px;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Job List with slide-in animation */
+    .job-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .job-card-wrapper {
+      animation: slideIn 300ms ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Highlighted Job Card (from notification tap) */
+    .job-card-wrapper.highlighted {
+      animation: highlightPulse 3s ease-out;
+      border-radius: 12px;
+    }
+
+    @keyframes highlightPulse {
+      0% {
+        background: rgba(16, 185, 129, 0.25);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
+      }
+      70% {
+        background: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+      }
+      100% {
+        background: transparent;
+        box-shadow: none;
+      }
+    }
+
+    /* Push Notification Permission Prompt Dialog */
+    .push-prompt-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .push-prompt-dialog {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    .push-prompt-icon {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      margin: 0 auto 16px;
+    }
+
+    .push-prompt-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .push-prompt-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0 0 8px;
+    }
+
+    .push-prompt-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin: 0 0 24px;
+    }
+
+    .push-prompt-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .push-prompt-btn {
+      min-height: 44px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .push-prompt-btn.primary {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .push-prompt-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .push-prompt-btn.secondary {
+      background: transparent;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .push-prompt-btn.secondary:hover {
+      background: rgba(148, 163, 184, 0.05);
+    }
+
+    /* Push Notification Denied Banner */
+    .push-denied-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+    }
+
+    .push-denied-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .push-denied-icon {
+      width: 20px;
+      height: 20px;
+      color: #f59e0b;
+      flex-shrink: 0;
+    }
+
+    .push-denied-text {
+      font-size: 13px;
+      color: #f59e0b;
+      line-height: 1.4;
+    }
+
+    .push-denied-link {
+      color: #fbbf24;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .push-denied-dismiss {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: #f59e0b;
+      cursor: pointer;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .push-denied-dismiss:hover {
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .push-denied-dismiss svg {
+      width: 16px;
+      height: 16px;
+    }

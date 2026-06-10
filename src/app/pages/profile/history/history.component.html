@@ -1,0 +1,97 @@
+<div class="history-page" #scrollContainer (scroll)="onScroll($event)">
+      <header class="history-header">
+        <h1 class="history-title">Job History</h1>
+      </header>
+
+      <!-- Initial Loading State: 5 skeleton rows -->
+      @if (isInitialLoading && history.length === 0) {
+        <div class="skeleton-list" aria-busy="true" aria-label="Loading job history">
+          @for (i of skeletonItems; track i) {
+            <app-skeleton-loader [lines]="3" [showAvatar]="true"></app-skeleton-loader>
+          }
+        </div>
+      } @else if (!isInitialLoading && history.length === 0 && !errorMessage) {
+        <!-- Empty State -->
+        <div class="empty-state" role="status">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 8v4l3 3"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          </div>
+          <h2 class="empty-title">No job history available</h2>
+          <p class="empty-message">Your completed jobs will appear here</p>
+        </div>
+      } @else if (!isInitialLoading && history.length === 0 && errorMessage) {
+        <!-- Error State (initial load failed) -->
+        <div class="error-state" role="alert">
+          <div class="error-content">
+            <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p class="error-message">{{ errorMessage }}</p>
+          </div>
+          <button
+            class="retry-btn"
+            (click)="onRetry()"
+            aria-label="Retry loading job history"
+          >
+            Retry
+          </button>
+        </div>
+      } @else if (history.length > 0) {
+        <!-- History List -->
+        <div class="history-list" role="list">
+          @for (item of history; track item.id) {
+            <div class="history-item" role="listitem">
+              <div class="item-header">
+                <span class="order-number">#{{ item.orderNumber }}</span>
+                <span class="job-type-badge" [class]="'badge-' + item.jobType">
+                  {{ item.jobType === 'shopper' ? 'Shopper' : 'Driver' }}
+                </span>
+              </div>
+              <div class="item-body">
+                <span class="store-name">{{ item.storeName }}</span>
+                <span class="completion-date">{{ formatDate(item.completedAt) }}</span>
+              </div>
+              <div class="item-footer">
+                <span class="earned-amount">{{ item.earnedAmount | zarCurrency }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Pagination Loading Indicator -->
+        @if (isPaginationLoading) {
+          <div class="pagination-loading" aria-busy="true" aria-label="Loading more jobs">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">Loading more...</span>
+          </div>
+        }
+
+        <!-- Pagination Error with Retry -->
+        @if (paginationError) {
+          <div class="pagination-error" role="alert">
+            <p class="pagination-error-text">{{ paginationError }}</p>
+            <button
+              class="retry-btn retry-btn-small"
+              (click)="onRetryPagination()"
+              aria-label="Retry loading more jobs"
+            >
+              Retry
+            </button>
+          </div>
+        }
+
+        <!-- End-of-List Indicator -->
+        @if (!hasMore && !isPaginationLoading && !paginationError) {
+          <div class="end-of-list" role="status">
+            <div class="end-divider"></div>
+            <span class="end-text">You've reached the end</span>
+            <div class="end-divider"></div>
+          </div>
+        }
+      }
+    </div>

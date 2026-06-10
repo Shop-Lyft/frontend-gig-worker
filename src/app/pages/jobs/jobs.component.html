@@ -1,0 +1,108 @@
+<div class="jobs-page">
+      <!-- Push Notification Permission Prompt Dialog -->
+      @if (showPushPrompt) {
+        <div class="push-prompt-overlay" role="dialog" aria-labelledby="push-prompt-title" aria-describedby="push-prompt-desc">
+          <div class="push-prompt-dialog">
+            <div class="push-prompt-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <h2 id="push-prompt-title" class="push-prompt-title">Enable Notifications</h2>
+            <p id="push-prompt-desc" class="push-prompt-desc">
+              Get notified instantly when new jobs matching your skills are available nearby.
+              This helps you respond quickly and earn more.
+            </p>
+            <div class="push-prompt-actions">
+              <button class="push-prompt-btn primary" (click)="onAllowNotifications()">Allow Notifications</button>
+              <button class="push-prompt-btn secondary" (click)="onDismissPushPrompt()">Not Now</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Push Notification Denied Banner -->
+      @if (showPushDeniedBanner) {
+        <div class="push-denied-banner" role="alert">
+          <div class="push-denied-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="push-denied-icon" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <span class="push-denied-text">
+              Push notifications disabled.
+              <a href="app-settings:notifications" class="push-denied-link" (click)="onOpenDeviceSettings($event)">Enable in device settings</a>
+              to get new job alerts.
+            </span>
+          </div>
+          <button class="push-denied-dismiss" (click)="onDismissPushDeniedBanner()" aria-label="Dismiss notification banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      }
+
+      <!-- Content Area -->
+      <section class="jobs-content">
+        @if ((loading$ | async) === true && jobsList === null) {
+          <!-- Loading State -->
+          <div class="skeleton-list">
+            @for (i of skeletonItems; track i) {
+              <app-skeleton-loader [lines]="3" [showAvatar]="true"></app-skeleton-loader>
+            }
+          </div>
+        } @else if (errorMessage) {
+          <!-- Error State -->
+          <app-error-retry
+            [message]="errorMessage"
+            (retry)="onRetry()"
+          ></app-error-retry>
+        } @else if (gpsPermissionDenied) {
+          <!-- No GPS Empty State -->
+          <div class="empty-state" role="status">
+            <div class="empty-icon gps-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+                <line x1="2" y1="2" x2="22" y2="22"/>
+              </svg>
+            </div>
+            <h2 class="empty-title">Location required</h2>
+            <p class="empty-message">Enable location to see available jobs</p>
+          </div>
+        } @else if (jobsList !== null && jobsList.length === 0) {
+          <!-- No Matching Jobs Empty State -->
+          <div class="empty-state" role="status">
+            <div class="empty-icon no-jobs-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <h2 class="empty-title">No jobs available</h2>
+            <p class="empty-message">No jobs available for the selected filter right now</p>
+          </div>
+        } @else if (jobsList !== null && jobsList.length > 0) {
+          <!-- Job List -->
+          <div class="job-list" role="list">
+            @for (job of jobsList; track job.id) {
+              <div
+                class="job-card-wrapper"
+                [class.highlighted]="highlightedJobId === job.id"
+                role="listitem"
+              >
+                <app-job-card
+                  [job]="job"
+                  [acceptLoading]="acceptingJobId === job.id"
+                  [disabled]="acceptingJobId !== null && acceptingJobId !== job.id || (hasActiveJob$ | async) === true"
+                  (accept)="onAcceptJob($event)"
+                ></app-job-card>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>

@@ -1,0 +1,83 @@
+<div class="delivery-container">
+      <!-- Order Header -->
+      <div class="order-header">
+        <h2 class="order-number">#SL-{{ job.orderId }}</h2>
+        <span class="job-badge">Delivery</span>
+      </div>
+
+      <!-- GPS Tracking Indicator -->
+      <div class="gps-indicator" [class.gps-stale]="gpsStale()">
+        @if (!gpsStale()) {
+          <span class="gps-dot"></span>
+          <span class="gps-text">GPS Active</span>
+        } @else {
+          <span class="gps-dot gps-dot-warning"></span>
+          <span class="gps-text gps-text-warning">GPS Signal Lost</span>
+        }
+      </div>
+
+      <!-- Delivery Info Section -->
+      <div class="delivery-info">
+        <div class="info-card">
+          <div class="info-label">Store Pickup</div>
+          <div class="info-value">{{ job.storeName }}</div>
+          <div class="info-address">{{ getStoreAddress() }}</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Customer Address</div>
+          <div class="info-value">{{ job.customerAddress || 'Address not available' }}</div>
+        </div>
+
+        <div class="info-card distance-card">
+          <div class="info-label">Distance</div>
+          <div class="info-value distance-value">{{ job.distance | distance }}</div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      @if (error()) {
+        <div class="error-message">
+          <span class="error-icon">⚠</span>
+          <span>{{ error()!.message }}</span>
+        </div>
+      }
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button
+          class="btn btn-navigate"
+          (click)="onNavigate()"
+          type="button"
+          aria-label="Navigate to customer address"
+        >
+          <span class="btn-icon">🧭</span>
+          Navigate
+        </button>
+
+        <a
+          class="btn btn-call"
+          [href]="getCustomerPhoneLink()"
+          aria-label="Call Customer"
+        >
+          <span class="btn-icon">📞</span>
+          Call Customer
+        </a>
+
+        <button
+          class="btn btn-complete"
+          (click)="onCompleteDelivery()"
+          [disabled]="completing()"
+          type="button"
+          aria-label="Complete Delivery"
+        >
+          @if (completing()) {
+            <span class="spinner"></span>
+            Completing...
+          } @else {
+            <span class="btn-icon">✓</span>
+            Complete Delivery
+          }
+        </button>
+      </div>
+    </div>

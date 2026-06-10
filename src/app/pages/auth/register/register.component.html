@@ -1,0 +1,163 @@
+<div class="register-container">
+      <div class="register-card">
+        <h1 class="register-title">Create Account</h1>
+        <p class="register-subtitle">Join ShopLyft as a gig worker</p>
+
+        <!-- Error Banner -->
+        <div class="error-banner" *ngIf="error$ | async as error">
+          <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Name Field -->
+          <div class="form-group">
+            <label for="name" class="form-label">Full Name</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              class="form-input"
+              [class.input-error]="fieldErrors['name']"
+              placeholder="Enter your full name"
+              autocomplete="name"
+            />
+            <span class="field-error" *ngIf="fieldErrors['name']">{{ fieldErrors['name'] }}</span>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              class="form-input"
+              [class.input-error]="fieldErrors['email']"
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+            <span class="field-error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'] }}</span>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              class="form-input"
+              [class.input-error]="fieldErrors['password']"
+              placeholder="Min 8 chars, 1 uppercase, 1 lowercase, 1 digit"
+              autocomplete="new-password"
+            />
+            <span class="field-error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'] }}</span>
+          </div>
+
+          <!-- Worker Type -->
+          <div class="form-group">
+            <label class="form-label">Worker Type</label>
+            <div class="radio-group">
+              <label class="radio-option" [class.radio-selected]="registerForm.get('workerType')?.value === 'shopper'">
+                <input type="radio" formControlName="workerType" value="shopper" />
+                <span class="radio-label">
+                  <svg class="radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 01-8 0"/>
+                  </svg>
+                  Shopper
+                </span>
+              </label>
+              <label class="radio-option" [class.radio-selected]="registerForm.get('workerType')?.value === 'driver'">
+                <input type="radio" formControlName="workerType" value="driver" />
+                <span class="radio-label">
+                  <svg class="radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="1" y="3" width="15" height="13"/>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                    <circle cx="5.5" cy="18.5" r="2.5"/>
+                    <circle cx="18.5" cy="18.5" r="2.5"/>
+                  </svg>
+                  Driver
+                </span>
+              </label>
+            </div>
+            <span class="field-error" *ngIf="fieldErrors['workerType']">{{ fieldErrors['workerType'] }}</span>
+          </div>
+
+          <!-- Bank Account Reference -->
+          <div class="form-group">
+            <label for="bankAccountRef" class="form-label">Bank Account Reference</label>
+            <input
+              id="bankAccountRef"
+              type="text"
+              formControlName="bankAccountRef"
+              class="form-input"
+              [class.input-error]="fieldErrors['bankAccountRef']"
+              placeholder="Account number or reference"
+              autocomplete="off"
+            />
+            <span class="field-error" *ngIf="fieldErrors['bankAccountRef']">{{ fieldErrors['bankAccountRef'] }}</span>
+          </div>
+
+          <!-- Driver-specific fields (conditional) -->
+          <ng-container *ngIf="registerForm.get('workerType')?.value === 'driver'">
+            <!-- Vehicle Type -->
+            <div class="form-group">
+              <label for="vehicleType" class="form-label">Vehicle Type</label>
+              <select
+                id="vehicleType"
+                formControlName="vehicleType"
+                class="form-input form-select"
+                [class.input-error]="fieldErrors['vehicleType']"
+              >
+                <option value="">Select vehicle type</option>
+                <option value="bicycle">Bicycle</option>
+                <option value="motorcycle">Motorcycle</option>
+                <option value="car">Car</option>
+              </select>
+              <span class="field-error" *ngIf="fieldErrors['vehicleType']">{{ fieldErrors['vehicleType'] }}</span>
+            </div>
+
+            <!-- Vehicle Registration -->
+            <div class="form-group">
+              <label for="vehicleRegistration" class="form-label">Vehicle Registration Number</label>
+              <input
+                id="vehicleRegistration"
+                type="text"
+                formControlName="vehicleRegistration"
+                class="form-input"
+                [class.input-error]="fieldErrors['vehicleRegistration']"
+                placeholder="e.g. CA 123-456"
+                autocomplete="off"
+              />
+              <span class="field-error" *ngIf="fieldErrors['vehicleRegistration']">{{ fieldErrors['vehicleRegistration'] }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="submit-btn"
+            [disabled]="(loading$ | async)"
+          >
+            <span *ngIf="!(loading$ | async)">Create Account</span>
+            <span *ngIf="loading$ | async" class="loading-content">
+              <svg class="spinner" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+              </svg>
+              Creating account...
+            </span>
+          </button>
+        </form>
+
+        <!-- Link to Login -->
+        <p class="login-link">
+          Already have an account?
+          <a routerLink="/auth/login" class="link">Sign in</a>
+        </p>
+      </div>
+    </div>

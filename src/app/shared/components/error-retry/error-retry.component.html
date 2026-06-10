@@ -1,0 +1,26 @@
+<div class="error-retry" role="alert">
+      <div class="error-content">
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p class="error-message">{{ message }}</p>
+      </div>
+
+      <button
+        class="retry-btn"
+        [disabled]="retrying || isCoolingDown"
+        (click)="onRetry()"
+        [attr.aria-label]="isCoolingDown ? 'Retry disabled, please wait' : 'Retry'"
+      >
+        @if (retrying) {
+          <span class="spinner" aria-hidden="true"></span>
+          Retrying...
+        } @else if (isCoolingDown) {
+          Wait {{ cooldownRemaining }}s
+        } @else {
+          Retry
+        }
+      </button>
+    </div>

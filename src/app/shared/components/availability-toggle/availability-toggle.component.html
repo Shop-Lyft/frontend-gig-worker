@@ -1,0 +1,27 @@
+<button
+      class="toggle-container"
+      [class.online]="available"
+      [class.is-loading]="loading"
+      [disabled]="disabled || loading"
+      [attr.aria-checked]="available"
+      [attr.aria-label]="available ? 'Currently online, tap to go offline' : 'Currently offline, tap to go online'"
+      role="switch"
+      (click)="onToggle()"
+    >
+      <span class="toggle-track">
+        <span class="toggle-thumb">
+          @if (loading) {
+            <span class="thumb-spinner" aria-hidden="true"></span>
+          }
+        </span>
+      </span>
+      <span class="toggle-label">
+        @if (loading) {
+          Updating...
+        } @else if (available) {
+          Online
+        } @else {
+          Offline
+        }
+      </span>
+    </button>

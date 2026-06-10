@@ -1,0 +1,33 @@
+<!-- Loading state -->
+    @if (loading$ | async) {
+      <div class="loading-state" role="status" aria-label="Loading active job">
+        <span class="spinner"></span>
+        <p class="loading-text">Loading active job...</p>
+      </div>
+    } @else {
+      @if (activeJob$ | async; as activeJob) {
+        <!-- Shopper mode: render Picklist -->
+        @if ((jobType$ | async) === 'shopper') {
+          <app-picklist />
+        }
+
+        <!-- Driver mode: render Delivery -->
+        @if ((jobType$ | async) === 'driver') {
+          <app-delivery [job]="activeJob" />
+        }
+      } @else {
+        <!-- No active job empty state -->
+        <div class="empty-state" role="status" aria-label="No active job">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <h2 class="empty-title">No active job</h2>
+          <p class="empty-description">You don't have an active job right now. Head to the jobs list to find and accept one.</p>
+          <a routerLink="/jobs" class="back-link" aria-label="Go to available jobs">
+            Browse Available Jobs
+          </a>
+        </div>
+      }
+    }

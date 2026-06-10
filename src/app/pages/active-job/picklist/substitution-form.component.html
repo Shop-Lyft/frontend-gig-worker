@@ -1,0 +1,157 @@
+<!-- Approved state -->
+    <div
+      *ngIf="substitutionStatus?.status === 'approved'"
+      class="substitution-result approved"
+      role="status"
+      aria-live="polite"
+    >
+      <svg class="result-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+      </svg>
+      <span>Approved: {{ substitutionStatus.substituteName }} (x{{ substitutionStatus.substituteQuantity }})</span>
+    </div>
+
+    <!-- Rejected state -->
+    <div
+      *ngIf="substitutionStatus?.status === 'rejected'"
+      class="substitution-result rejected"
+      role="status"
+      aria-live="polite"
+    >
+      <svg class="result-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+      </svg>
+      <span>Rejected - skip</span>
+    </div>
+
+    <!-- Timed out state -->
+    <div
+      *ngIf="substitutionStatus?.status === 'timed_out'"
+      class="substitution-result timed-out"
+      role="status"
+      aria-live="polite"
+    >
+      <svg class="result-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+      </svg>
+      <span>Timed out - skip</span>
+    </div>
+
+    <!-- Pending state -->
+    <div
+      *ngIf="substitutionStatus?.status === 'pending'"
+      class="substitution-pending"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="pending-badge">Pending approval</span>
+      <button
+        type="button"
+        class="btn btn-cancel"
+        (click)="onCancel()"
+        aria-label="Cancel substitution"
+      >
+        Cancel
+      </button>
+    </div>
+
+    <!-- Form (shown when no substitution status) -->
+    <form
+      *ngIf="!substitutionStatus"
+      class="substitution-form"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      aria-label="Substitution form"
+    >
+      <div class="form-group">
+        <label [for]="'sub-name-' + itemId">Substitute product name</label>
+        <input
+          [id]="'sub-name-' + itemId"
+          type="text"
+          formControlName="substituteName"
+          placeholder="Enter substitute product name"
+          maxlength="200"
+          [attr.aria-invalid]="validationErrors['substituteName'] ? 'true' : null"
+          [attr.aria-describedby]="validationErrors['substituteName'] ? 'sub-name-error-' + itemId : null"
+        />
+        <span
+          *ngIf="validationErrors['substituteName']"
+          [id]="'sub-name-error-' + itemId"
+          class="field-error"
+          role="alert"
+        >
+          {{ validationErrors['substituteName'] }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label [for]="'sub-qty-' + itemId">Quantity</label>
+        <input
+          [id]="'sub-qty-' + itemId"
+          type="number"
+          formControlName="substituteQuantity"
+          min="1"
+          max="50"
+          placeholder="1–50"
+          [attr.aria-invalid]="validationErrors['substituteQuantity'] ? 'true' : null"
+          [attr.aria-describedby]="validationErrors['substituteQuantity'] ? 'sub-qty-error-' + itemId : null"
+        />
+        <span
+          *ngIf="validationErrors['substituteQuantity']"
+          [id]="'sub-qty-error-' + itemId"
+          class="field-error"
+          role="alert"
+        >
+          {{ validationErrors['substituteQuantity'] }}
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label [for]="'sub-reason-' + itemId">Reason</label>
+        <select
+          [id]="'sub-reason-' + itemId"
+          formControlName="reason"
+          [attr.aria-invalid]="validationErrors['reason'] ? 'true' : null"
+          [attr.aria-describedby]="validationErrors['reason'] ? 'sub-reason-error-' + itemId : null"
+        >
+          <option value="" disabled>Select a reason</option>
+          <option value="out_of_stock">Out of stock</option>
+          <option value="damaged">Damaged</option>
+          <option value="expired">Expired</option>
+        </select>
+        <span
+          *ngIf="validationErrors['reason']"
+          [id]="'sub-reason-error-' + itemId"
+          class="field-error"
+          role="alert"
+        >
+          {{ validationErrors['reason'] }}
+        </span>
+      </div>
+
+      <!-- Submission error -->
+      <div
+        *ngIf="submissionError$ | async as error"
+        class="submission-error"
+        role="alert"
+        aria-live="polite"
+      >
+        <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ error.message }}</span>
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary submit-button"
+        [disabled]="submitting"
+        [attr.aria-busy]="submitting"
+      >
+        <span *ngIf="!submitting">Submit Substitution</span>
+        <span *ngIf="submitting" class="loading-indicator">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Submitting...</span>
+        </span>
+      </button>
+    </form>

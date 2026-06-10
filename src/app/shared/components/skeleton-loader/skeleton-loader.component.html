@@ -1,0 +1,13 @@
+<div class="skeleton-container" aria-busy="true" aria-label="Loading content">
+      @if (showAvatar) {
+        <div class="skeleton-avatar"></div>
+      }
+      <div class="skeleton-lines">
+        @for (line of linesArray; track $index) {
+          <div
+            class="skeleton-line"
+            [style.width]="getLineWidth($index)"
+          ></div>
+        }
+      </div>
+    </div>

@@ -1,0 +1,193 @@
+.earnings-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding: 16px;
+      gap: 20px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .metric-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: #1e293b;
+      border-radius: 12px;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .metric-value.currency {
+      color: #10b981;
+    }
+
+    .metric-value.rating {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #f59e0b;
+    }
+
+    .star-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Settlement Section */
+    .settlement-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .settlement-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .settlement-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .settlement-row:last-child {
+      border-bottom: none;
+    }
+
+    .settlement-day {
+      font-size: 14px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .settlement-amount {
+      font-size: 14px;
+      font-weight: 600;
+      color: #10b981;
+    }
+
+    .settlement-info {
+      font-size: 13px;
+      color: #94a3b8;
+      margin: 4px 0 0;
+      text-align: center;
+    }
+
+    /* Skeleton Loading Styles */
+    .skeleton-metrics {
+      pointer-events: none;
+    }
+
+    .skeleton-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .skeleton-label {
+      width: 80%;
+      height: 12px;
+      background: #334155;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-value {
+      width: 60%;
+      height: 22px;
+      background: #334155;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-section-title {
+      width: 150px;
+      height: 16px;
+      background: #334155;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-settlement-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: #1e293b;
+      border-radius: 12px;
+      margin-bottom: 2px;
+    }
+
+    .skeleton-settlement-row:first-of-type {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .skeleton-settlement-row:last-of-type {
+      border-radius: 0 0 12px 12px;
+      margin-bottom: 0;
+    }
+
+    .skeleton-day {
+      width: 70px;
+      height: 14px;
+      background: #334155;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-amount {
+      width: 60px;
+      height: 14px;
+      background: #334155;
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.4;
+      }
+    }

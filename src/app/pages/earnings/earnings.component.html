@@ -1,0 +1,82 @@
+<div class="earnings-page">
+      <h1 class="page-title">Earnings</h1>
+
+      @if ((loading$ | async) === true && (earningsData$ | async) === null) {
+        <!-- Skeleton Loading State -->
+        <div class="metrics-grid skeleton-metrics">
+          @for (i of skeletonCards; track i) {
+            <div class="metric-card skeleton-card">
+              <div class="skeleton-label"></div>
+              <div class="skeleton-value"></div>
+            </div>
+          }
+        </div>
+        <div class="settlement-section">
+          <div class="skeleton-section-title"></div>
+          @for (i of skeletonSettlements; track i) {
+            <div class="skeleton-settlement-row">
+              <div class="skeleton-day"></div>
+              <div class="skeleton-amount"></div>
+            </div>
+          }
+        </div>
+      } @else if (errorMessage) {
+        <!-- Error State -->
+        <app-error-retry
+          [message]="errorMessage"
+          (retry)="onRetry()"
+        ></app-error-retry>
+      } @else {
+        <!-- Metric Cards -->
+        <div class="metrics-grid">
+          <!-- Weekly Earnings Card -->
+          <div class="metric-card">
+            <span class="metric-label">Weekly Earnings</span>
+            <span class="metric-value currency">{{ weeklyEarnings | zarCurrency }}</span>
+          </div>
+
+          <!-- Jobs Completed Card -->
+          <div class="metric-card">
+            <span class="metric-label">Jobs Completed</span>
+            <span class="metric-value">{{ jobsCompleted }}</span>
+          </div>
+
+          <!-- Rating Card -->
+          <div class="metric-card">
+            <span class="metric-label">Rating</span>
+            <span class="metric-value rating">
+              <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              {{ workerRating.toFixed(1) }}
+            </span>
+          </div>
+
+          <!-- Monthly Earnings Card -->
+          <div class="metric-card">
+            <span class="metric-label">Monthly Earnings</span>
+            <span class="metric-value currency">{{ monthlyEarnings | zarCurrency }}</span>
+          </div>
+        </div>
+
+        <!-- Settlement List -->
+        <section class="settlement-section">
+          <h2 class="section-title">Recent Settlements</h2>
+          <div class="settlement-list" role="list">
+            @for (settlement of settlements; track settlement.day) {
+              <div class="settlement-row" role="listitem">
+                <span class="settlement-day">{{ settlement.day }}</span>
+                <span class="settlement-amount">{{ settlement.amount | zarCurrency }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Settlement Info -->
+          @if (bankAccountRefMasked) {
+            <p class="settlement-info">
+              Settled daily via ****{{ bankAccountRefMasked }}
+            </p>
+          }
+        </section>
+      }
+    </div>

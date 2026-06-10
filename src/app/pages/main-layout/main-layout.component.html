@@ -1,0 +1,25 @@
+<header class="layout-header">
+      <div class="top-bar">
+        <span class="greeting">
+          @if (worker$ | async; as worker) {
+            Welcome back, {{ worker.name }}
+          } @else {
+            Welcome
+          }
+        </span>
+      </div>
+      <h1 class="brand-logo">
+        <span class="brand-logo__icon">🛍️</span>
+        <span class="brand-logo__text">Shop<span class="brand-logo__accent">lyft</span></span>
+        @if (worker$ | async; as worker) {
+          <span class="brand-logo__tag" [class.brand-logo__tag--driver]="worker.workerType === 'driver'">
+            {{ worker.workerType === 'shopper' ? 'Shopper' : 'Driver' }}
+          </span>
+        }
+      </h1>
+    </header>
+    <app-connection-status></app-connection-status>
+    <main class="layout-content">
+      <router-outlet></router-outlet>
+    </main>
+    <app-bottom-nav [hasActiveJob]="(hasActiveJob$ | async) ?? false"></app-bottom-nav>
