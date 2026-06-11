@@ -244,9 +244,22 @@ export class GigWorkerFirebaseService implements GigWorkerService {
             switchMap(() => from(getDoc(jobDocRef))),
             map((updatedSnap) => {
               const jobData = updatedSnap.data()!;
-              // Propagate status to the order: shopper accepted → order is being picked
-              if (jobData['orderId']) {
-                updateDoc(doc(this.db, 'orders', jobData['orderId']), { status: 'being_picked' });
+              // Propagate status to orders: shopper accepted → being picked
+              const orderId = jobData['orderId'];
+              if (orderId) {
+                // Try updating sub-orders by parentOrderId first
+                const ordersRef = collection(this.db, 'orders');
+                const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
+                getDocs(orderQuery).then(snapshot => {
+                  if (!snapshot.empty) {
+                    snapshot.docs.forEach(d => {
+                      updateDoc(doc(this.db, 'orders', d.id), { status: 'being_picked' });
+                    });
+                  } else {
+                    // Single-store order — direct update
+                    updateDoc(doc(this.db, 'orders', orderId), { status: 'being_picked' }).catch(() => {});
+                  }
+                });
               }
               return this.mapJob(jobId, jobData);
             })
