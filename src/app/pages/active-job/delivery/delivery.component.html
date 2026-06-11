@@ -64,10 +64,29 @@
           Call Customer
         </a>
 
+        <!-- Delivery PIN Verification -->
+        <div class="pin-section">
+          <label class="pin-label">Enter customer's delivery PIN to complete:</label>
+          <div class="pin-input-row">
+            <input
+              type="text"
+              class="pin-input"
+              [(ngModel)]="enteredPin"
+              maxlength="4"
+              placeholder="____"
+              inputmode="numeric"
+              pattern="[0-9]*"
+            />
+          </div>
+          @if (pinError) {
+            <span class="pin-error">{{ pinError }}</span>
+          }
+        </div>
+
         <button
           class="btn btn-complete"
           (click)="onCompleteDelivery()"
-          [disabled]="completing()"
+          [disabled]="completing() || enteredPin.length < 4"
           type="button"
           aria-label="Complete Delivery"
         >

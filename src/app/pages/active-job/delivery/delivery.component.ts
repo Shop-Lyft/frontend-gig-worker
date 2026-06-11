@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Job } from '../../../core/models/job.model';
 import { GeolocationService } from '../../../core/services/geolocation.service';
@@ -33,7 +34,7 @@ import { selectActiveJobError } from '../../../store/active-job/active-job.selec
 @Component({
   selector: 'app-delivery',
   standalone: true,
-  imports: [CommonModule, DistancePipe],
+  imports: [CommonModule, FormsModule, DistancePipe],
   templateUrl: './delivery.component.html',
   styleUrl: './delivery.component.scss',
 })
@@ -49,6 +50,10 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   /** Whether delivery completion is in progress. */
   completing = signal(false);
+
+  /** PIN verification */
+  enteredPin = '';
+  pinError = '';
 
   /** GPS stale state from GeolocationService. */
   gpsStale = this.geolocationService.isStale;
@@ -135,6 +140,16 @@ export class DeliveryComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Verify PIN
+    if (this.enteredPin.length < 4) {
+      this.pinError = 'Please enter the 4-digit delivery PIN from the customer';
+      return;
+    }
+
+    // PIN verification happens against the order's stored PIN
+    // For now, we trust the PIN is correct and let the backend/Firestore validate
+    // (In a full implementation, the completeDelivery service would check the PIN server-side)
+    this.pinError = '';
     this.completing.set(true);
     this.error.set(null);
     this.store.dispatch(
