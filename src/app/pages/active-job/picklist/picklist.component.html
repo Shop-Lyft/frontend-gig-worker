@@ -58,12 +58,22 @@
                   (change)="onToggleItem(item, $event)"
                   [attr.aria-label]="item.quantity + 'x ' + item.productName"
                 />
-                <span
-                  class="pick-item-text"
-                  [class.strikethrough]="item.status === 'picked' || item.status === 'substituted'"
-                >
-                  {{ item.quantity }}x {{ item.productName }}
-                </span>
+                <div class="pick-item-content">
+                  @if (item.imageUrl) {
+                    <img [src]="item.imageUrl" class="pick-item-img" alt="" />
+                  }
+                  <div class="pick-item-details">
+                    <span
+                      class="pick-item-text"
+                      [class.strikethrough]="item.status === 'picked' || item.status === 'substituted'"
+                    >
+                      {{ item.quantity }}x {{ item.productName }}
+                    </span>
+                    @if (item.brand || item.size) {
+                      <span class="pick-item-meta">{{ item.brand }} {{ item.size }}</span>
+                    }
+                  </div>
+                </div>
               </label>
 
               <!-- Substitution badges -->

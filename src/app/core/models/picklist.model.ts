@@ -1,6 +1,9 @@
 export interface PickItem {
   id: string;
   productName: string;
+  brand?: string;
+  size?: string;
+  imageUrl?: string;
   quantity: number;
   status: PickItemStatus;
   checkedAt?: string;

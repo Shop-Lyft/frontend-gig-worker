@@ -265,3 +265,32 @@
     .mark-all-btn.enabled:hover {
       background: #059669;
     }
+
+
+// Product details in picklist
+.pick-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.pick-item-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.pick-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.pick-item-meta {
+  font-size: 0.7rem;
+  color: #10b981;
+  font-weight: 500;
+}
