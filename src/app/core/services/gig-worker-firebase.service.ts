@@ -274,12 +274,11 @@ export class GigWorkerFirebaseService implements GigWorkerService {
   getActiveJob(): Observable<Job | null> {
     return this.withCurrentUser((uid) => {
       const jobsRef = collection(this.db, 'jobs');
-      const activeStatuses = ['assigned', 'being_picked', 'picked', 'in_delivery'];
+      // Simple query — just get all jobs assigned to this worker
       const q = query(
         jobsRef,
         where('assignedWorkerId', '==', uid),
-        where('status', 'in', activeStatuses),
-        limit(1)
+        limit(10)
       );
 
       return from(getDocs(q)).pipe(
@@ -287,8 +286,11 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           if (snapshot.empty) {
             return null;
           }
-          const docSnap = snapshot.docs[0];
-          return this.mapJob(docSnap.id, docSnap.data());
+          // Filter client-side for active statuses
+          const activeStatuses = ['assigned', 'being_picked', 'picked', 'in_delivery'];
+          const activeDoc = snapshot.docs.find(d => activeStatuses.includes(d.data()['status']));
+          if (!activeDoc) return null;
+          return this.mapJob(activeDoc.id, activeDoc.data());
         })
       );
     });
