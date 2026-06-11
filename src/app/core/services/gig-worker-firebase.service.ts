@@ -411,8 +411,22 @@ export class GigWorkerFirebaseService implements GigWorkerService {
             })
           ).pipe(
             switchMap(() => {
-              // Propagate status to the order: delivery complete
-              return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }));
+              // Update all sub-orders with this parentOrderId to 'delivered'
+              const ordersRef = collection(this.db, 'orders');
+              const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
+              return from(getDocs(orderQuery)).pipe(
+                switchMap((orderSnapshot) => {
+                  if (orderSnapshot.empty) {
+                    // Try direct update (single-store order where orderId IS the doc ID)
+                    return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }).catch(() => {}));
+                  }
+                  // Update all sub-orders
+                  const updates = orderSnapshot.docs.map(d =>
+                    updateDoc(doc(this.db, 'orders', d.id), { status: 'delivered' })
+                  );
+                  return from(Promise.all(updates).then(() => {}));
+                })
+              );
             })
           );
         })
