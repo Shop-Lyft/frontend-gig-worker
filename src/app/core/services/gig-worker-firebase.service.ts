@@ -516,35 +516,138 @@ export class GigWorkerFirebaseService implements GigWorkerService {
 
   private doCompleteDelivery(jobId: string, orderId: string): Observable<void> {
     const jobDocRef = doc(this.db, 'jobs', jobId);
-    return from(
-      updateDoc(jobDocRef, {
-        status: 'delivered',
-        completedAt: Timestamp.now(),
-      })
-    ).pipe(
-      switchMap(() => {
-        // Also mark the shopper job as delivered
-        const shopperJobId = `job_${orderId}_shopper`;
-        updateDoc(doc(this.db, 'jobs', shopperJobId), { status: 'delivered', completedAt: Timestamp.now() }).catch(() => {});
+    return from(getDoc(jobDocRef)).pipe(
+      switchMap((jobSnap) => {
+        const jobData = jobSnap.exists() ? jobSnap.data() : null;
 
-        // Update all sub-orders with this parentOrderId to 'delivered'
-        const ordersRef = collection(this.db, 'orders');
-        const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
-        return from(getDocs(orderQuery)).pipe(
-          switchMap((orderSnapshot) => {
-            if (orderSnapshot.empty) {
-              // Try direct update (single-store order where orderId IS the doc ID)
-              return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }).catch(() => {}));
-            }
-            // Update all sub-orders
-            const updates = orderSnapshot.docs.map(d =>
-              updateDoc(doc(this.db, 'orders', d.id), { status: 'delivered' })
+        return from(
+          updateDoc(jobDocRef, {
+            status: 'delivered',
+            completedAt: Timestamp.now(),
+          })
+        ).pipe(
+          switchMap(() => {
+            // Also mark the shopper job as delivered
+            const shopperJobId = `job_${orderId}_shopper`;
+            const shopperJobRef = doc(this.db, 'jobs', shopperJobId);
+
+            // Write earnings records for both workers
+            this.writeEarningsRecords(orderId, shopperJobId, jobId).catch(err =>
+              console.error('[Earnings] Failed to write:', err)
             );
-            return from(Promise.all(updates).then(() => {}));
+
+            updateDoc(shopperJobRef, { status: 'delivered', completedAt: Timestamp.now() }).catch(() => {});
+
+            // Update all sub-orders with this parentOrderId to 'delivered'
+            const ordersRef = collection(this.db, 'orders');
+            const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
+            return from(getDocs(orderQuery)).pipe(
+              switchMap((orderSnapshot) => {
+                if (orderSnapshot.empty) {
+                  return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }).catch(() => {}));
+                }
+                const updates = orderSnapshot.docs.map(d =>
+                  updateDoc(doc(this.db, 'orders', d.id), { status: 'delivered' })
+                );
+                return from(Promise.all(updates).then(() => {}));
+              })
+            );
           })
         );
       })
     );
+  }
+
+  /**
+   * Write earnings records for shopper and driver when delivery is completed.
+   * Reads pay rates from platform_config/pay_rates.
+   */
+  private async writeEarningsRecords(orderId: string, shopperJobId: string, driverJobId: string): Promise<void> {
+    // Read pay rates config
+    const ratesDoc = await getDoc(doc(this.db, 'platform_config', 'pay_rates'));
+    const rates = ratesDoc.exists() ? ratesDoc.data() : {};
+
+    const shopperPerItem = rates['shopperPerItem'] || 5;
+    const shopperMinPay = rates['shopperMinPay'] || 25;
+    const shopperMultiStoreBonus = rates['shopperMultiStoreBonus'] || 10;
+    const driverBaseFee = rates['driverBaseFee'] || 20;
+    const driverPerKm = rates['driverPerKm'] || 7;
+    const driverPerItem = rates['driverPerItem'] || 2;
+    const driverMinPay = rates['driverMinPay'] || 30;
+    const peakMultiplier = rates['peakMultiplier'] || 1.0;
+    const peakStartHour = rates['peakStartHour'] || 17;
+    const peakEndHour = rates['peakEndHour'] || 20;
+
+    // Check if currently peak hours
+    const currentHour = new Date().getHours();
+    const isPeak = currentHour >= peakStartHour && currentHour < peakEndHour;
+    const multiplier = isPeak ? peakMultiplier : 1.0;
+
+    // Get shopper job data
+    const shopperSnap = await getDoc(doc(this.db, 'jobs', shopperJobId));
+    if (shopperSnap.exists()) {
+      const shopperData = shopperSnap.data();
+      const itemCount = shopperData['itemCount'] || 0;
+      const totalStores = shopperData['totalStores'] || 1;
+      const workerId = shopperData['assignedWorkerId'];
+
+      let shopperPay = itemCount * shopperPerItem;
+      if (totalStores > 1) shopperPay += shopperMultiStoreBonus;
+      shopperPay = Math.max(shopperMinPay, shopperPay) * multiplier;
+      shopperPay = Math.round(shopperPay * 100) / 100;
+
+      if (workerId) {
+        const earningId = `earn_${shopperJobId}_${Date.now()}`;
+        await setDoc(doc(this.db, 'earnings', earningId), {
+          workerId,
+          jobId: shopperJobId,
+          orderId,
+          jobType: 'shopper',
+          amount: shopperPay,
+          itemCount,
+          isPeak,
+          multiplier,
+          status: 'pending', // pending settlement
+          earnedAt: Timestamp.now(),
+        });
+
+        // Update the job's estimatedPay to the actual calculated pay
+        await updateDoc(doc(this.db, 'jobs', shopperJobId), { estimatedPay: shopperPay }).catch(() => {});
+      }
+    }
+
+    // Get driver job data
+    const driverSnap = await getDoc(doc(this.db, 'jobs', driverJobId));
+    if (driverSnap.exists()) {
+      const driverData = driverSnap.data();
+      const itemCount = driverData['itemCount'] || 0;
+      const workerId = driverData['assignedWorkerId'];
+      const distance = driverData['distance'] || 0; // km, if available
+
+      let driverPay = driverBaseFee + (distance * driverPerKm) + (itemCount * driverPerItem);
+      driverPay = Math.max(driverMinPay, driverPay) * multiplier;
+      driverPay = Math.round(driverPay * 100) / 100;
+
+      if (workerId) {
+        const earningId = `earn_${driverJobId}_${Date.now()}`;
+        await setDoc(doc(this.db, 'earnings', earningId), {
+          workerId,
+          jobId: driverJobId,
+          orderId,
+          jobType: 'driver',
+          amount: driverPay,
+          itemCount,
+          distance,
+          isPeak,
+          multiplier,
+          status: 'pending',
+          earnedAt: Timestamp.now(),
+        });
+
+        // Update the job's estimatedPay to the actual calculated pay
+        await updateDoc(doc(this.db, 'jobs', driverJobId), { estimatedPay: driverPay }).catch(() => {});
+      }
+    }
   }
 
   cancelActiveJob(jobId: string): Observable<void> {
