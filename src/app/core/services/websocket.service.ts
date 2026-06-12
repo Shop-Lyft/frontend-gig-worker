@@ -97,10 +97,16 @@ export class WebSocketService implements OnDestroy {
   /**
    * Opens a WebSocket connection to the backend with JWT authentication.
    * Starts the heartbeat interval upon successful connection.
+   * Skipped in Firebase mode (no Go backend available).
    *
    * @param token - JWT auth token passed as a query parameter
    */
   connect(token: string): void {
+    // Skip WebSocket when using Firebase — real-time is handled by Firestore onSnapshot
+    if (environment.BACKEND_MODE === 'firebase' || (environment as any).useFirebase) {
+      return;
+    }
+
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       return; // Already connected
     }

@@ -263,21 +263,27 @@ export class GigWorkerFirebaseService implements GigWorkerService {
                     const ordersRef = collection(this.db, 'orders');
                     const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
                     getDocs(orderQuery).then(snapshot => {
+                      const updatePayload: any = { status: newOrderStatus };
+                      if (jobType === 'driver') {
+                        updatePayload.driverName = workerName;
+                      } else {
+                        updatePayload.shopperName = workerName;
+                      }
+                      console.log('[AcceptJob] Updating orders with:', updatePayload, 'found:', snapshot.size, 'docs');
+
                       if (!snapshot.empty) {
                         snapshot.docs.forEach(d => {
-                          updateDoc(doc(this.db, 'orders', d.id), {
-                            status: newOrderStatus,
-                            [workerField]: workerName,
-                          });
+                          updateDoc(doc(this.db, 'orders', d.id), updatePayload)
+                            .then(() => console.log('[AcceptJob] Updated order:', d.id))
+                            .catch(err => console.error('[AcceptJob] Failed to update order:', d.id, err));
                         });
                       } else {
                         // Single-store order — direct update
-                        updateDoc(doc(this.db, 'orders', orderId), {
-                          status: newOrderStatus,
-                          [workerField]: workerName,
-                        }).catch(() => {});
+                        updateDoc(doc(this.db, 'orders', orderId), updatePayload)
+                          .then(() => console.log('[AcceptJob] Updated single order:', orderId))
+                          .catch(err => console.error('[AcceptJob] Failed single order update:', orderId, err));
                       }
-                    });
+                    }).catch(err => console.error('[AcceptJob] Query failed:', err));
                   }
                   return this.mapJob(jobId, jobData);
                 })
