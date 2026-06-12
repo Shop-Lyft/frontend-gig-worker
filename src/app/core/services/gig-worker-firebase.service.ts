@@ -234,39 +234,54 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           if (data['status'] !== 'pending') {
             return throwError(() => ({ status: 409, message: 'This job is no longer available.' }));
           }
-          return from(
-            updateDoc(jobDocRef, {
-              status: 'assigned',
-              assignedWorkerId: uid,
-              assignedAt: Timestamp.now(),
-            })
-          ).pipe(
-            switchMap(() => from(getDoc(jobDocRef))),
-            map((updatedSnap) => {
-              const jobData = updatedSnap.data()!;
-              const orderId = jobData['orderId'];
-              const jobType = jobData['jobType'];
 
-              // Propagate status to orders based on job type:
-              // shopper accepted → being_picked
-              // driver accepted → in_delivery
-              const newOrderStatus = jobType === 'driver' ? 'in_delivery' : 'being_picked';
+          // Get worker name for order assignment display
+          const workerDocRef = doc(this.db, 'gig_workers', uid);
+          return from(getDoc(workerDocRef)).pipe(
+            switchMap((workerSnap) => {
+              const workerName = workerSnap.exists() ? (workerSnap.data()['name'] || 'Worker') : 'Worker';
 
-              if (orderId) {
-                const ordersRef = collection(this.db, 'orders');
-                const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
-                getDocs(orderQuery).then(snapshot => {
-                  if (!snapshot.empty) {
-                    snapshot.docs.forEach(d => {
-                      updateDoc(doc(this.db, 'orders', d.id), { status: newOrderStatus });
+              return from(
+                updateDoc(jobDocRef, {
+                  status: 'assigned',
+                  assignedWorkerId: uid,
+                  assignedWorkerName: workerName,
+                  assignedAt: Timestamp.now(),
+                })
+              ).pipe(
+                switchMap(() => from(getDoc(jobDocRef))),
+                map((updatedSnap) => {
+                  const jobData = updatedSnap.data()!;
+                  const orderId = jobData['orderId'];
+                  const jobType = jobData['jobType'];
+
+                  // Propagate status + worker assignment to orders
+                  const newOrderStatus = jobType === 'driver' ? 'in_delivery' : 'being_picked';
+                  const workerField = jobType === 'driver' ? 'driverName' : 'shopperName';
+
+                  if (orderId) {
+                    const ordersRef = collection(this.db, 'orders');
+                    const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
+                    getDocs(orderQuery).then(snapshot => {
+                      if (!snapshot.empty) {
+                        snapshot.docs.forEach(d => {
+                          updateDoc(doc(this.db, 'orders', d.id), {
+                            status: newOrderStatus,
+                            [workerField]: workerName,
+                          });
+                        });
+                      } else {
+                        // Single-store order — direct update
+                        updateDoc(doc(this.db, 'orders', orderId), {
+                          status: newOrderStatus,
+                          [workerField]: workerName,
+                        }).catch(() => {});
+                      }
                     });
-                  } else {
-                    // Single-store order — direct update
-                    updateDoc(doc(this.db, 'orders', orderId), { status: newOrderStatus }).catch(() => {});
                   }
-                });
-              }
-              return this.mapJob(jobId, jobData);
+                  return this.mapJob(jobId, jobData);
+                })
+              );
             })
           );
         })
