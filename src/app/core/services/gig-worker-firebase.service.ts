@@ -244,20 +244,25 @@ export class GigWorkerFirebaseService implements GigWorkerService {
             switchMap(() => from(getDoc(jobDocRef))),
             map((updatedSnap) => {
               const jobData = updatedSnap.data()!;
-              // Propagate status to orders: shopper accepted → being picked
               const orderId = jobData['orderId'];
+              const jobType = jobData['jobType'];
+
+              // Propagate status to orders based on job type:
+              // shopper accepted → being_picked
+              // driver accepted → in_delivery
+              const newOrderStatus = jobType === 'driver' ? 'in_delivery' : 'being_picked';
+
               if (orderId) {
-                // Try updating sub-orders by parentOrderId first
                 const ordersRef = collection(this.db, 'orders');
                 const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
                 getDocs(orderQuery).then(snapshot => {
                   if (!snapshot.empty) {
                     snapshot.docs.forEach(d => {
-                      updateDoc(doc(this.db, 'orders', d.id), { status: 'being_picked' });
+                      updateDoc(doc(this.db, 'orders', d.id), { status: newOrderStatus });
                     });
                   } else {
                     // Single-store order — direct update
-                    updateDoc(doc(this.db, 'orders', orderId), { status: 'being_picked' }).catch(() => {});
+                    updateDoc(doc(this.db, 'orders', orderId), { status: newOrderStatus }).catch(() => {});
                   }
                 });
               }
@@ -405,30 +410,32 @@ export class GigWorkerFirebaseService implements GigWorkerService {
           // Update the shopper job to 'picked'
           return from(updateDoc(jobDocRef, { status: 'picked' })).pipe(
             switchMap(() => {
-              // Propagate status to the order: all items picked → in delivery (driver job being created)
-              if (jobData && jobData['orderId']) {
-                updateDoc(doc(this.db, 'orders', jobData['orderId']), { status: 'in_delivery' });
-              }
-
               // If this is a shopper job, create a corresponding driver job
               if (jobData && jobData['jobType'] === 'shopper') {
-                const driverJobId = `job_${jobData['orderId']}_driver`;
-                const driverJob: DocumentData = {
-                  orderId: jobData['orderId'] || '',
-                  storeId: jobData['storeId'] || '',
-                  storeName: jobData['storeName'] || '',
-                  jobType: 'driver',
-                  status: 'pending',
-                  storeLatitude: jobData['storeLatitude'] || 0,
-                  storeLongitude: jobData['storeLongitude'] || 0,
-                  itemCount: jobData['itemCount'] || 0,
-                  estimatedPay: Math.max(30, (jobData['itemCount'] || 1) * 4),
-                  customerAddress: jobData['customerAddress'] || '',
-                  customerPhone: jobData['customerPhone'] || '',
-                  createdAt: Timestamp.now(),
-                };
-                const driverJobRef = doc(this.db, 'jobs', driverJobId);
-                return from(setDoc(driverJobRef, driverJob));
+                const orderId = jobData['orderId'] || '';
+
+                // Fetch deliveryPin from the order
+                const ordersRef = collection(this.db, 'orders');
+                const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId), limit(1));
+                return from(getDocs(orderQuery)).pipe(
+                  switchMap((orderSnap) => {
+                    let deliveryPin = '';
+                    if (!orderSnap.empty) {
+                      deliveryPin = orderSnap.docs[0].data()['deliveryPin'] || '';
+                    } else {
+                      // Try direct order doc
+                      return from(getDoc(doc(this.db, 'orders', orderId))).pipe(
+                        switchMap((directOrder) => {
+                          if (directOrder.exists()) {
+                            deliveryPin = directOrder.data()['deliveryPin'] || '';
+                          }
+                          return this.createDriverJob(orderId, jobData, deliveryPin);
+                        })
+                      );
+                    }
+                    return this.createDriverJob(orderId, jobData, deliveryPin);
+                  })
+                );
               }
               return of(undefined);
             }),
@@ -439,46 +446,90 @@ export class GigWorkerFirebaseService implements GigWorkerService {
     });
   }
 
+  private createDriverJob(orderId: string, shopperJobData: DocumentData, deliveryPin: string): Observable<void> {
+    const driverJobId = `job_${orderId}_driver`;
+    const driverJob: DocumentData = {
+      orderId,
+      storeId: shopperJobData['storeId'] || '',
+      storeName: shopperJobData['storeName'] || '',
+      jobType: 'driver',
+      status: 'pending',
+      storeLatitude: shopperJobData['storeLatitude'] || 0,
+      storeLongitude: shopperJobData['storeLongitude'] || 0,
+      itemCount: shopperJobData['itemCount'] || 0,
+      estimatedPay: Math.max(30, (shopperJobData['itemCount'] || 1) * 4),
+      customerAddress: shopperJobData['customerAddress'] || '',
+      customerPhone: shopperJobData['customerPhone'] || '',
+      deliveryPin,
+      createdAt: Timestamp.now(),
+    };
+    const driverJobRef = doc(this.db, 'jobs', driverJobId);
+    return from(setDoc(driverJobRef, driverJob)).pipe(map(() => undefined as void));
+  }
+
   completeDelivery(orderId: string): Observable<void> {
-    return this.withCurrentUser((_uid) => {
+    return this.withCurrentUser((uid) => {
       const jobsRef = collection(this.db, 'jobs');
-      const q = query(jobsRef, where('orderId', '==', orderId), limit(1));
+      // Query for the driver job specifically (assigned to this worker, for this order)
+      const q = query(
+        jobsRef,
+        where('orderId', '==', orderId),
+        where('jobType', '==', 'driver'),
+        limit(1)
+      );
 
       return from(getDocs(q)).pipe(
         switchMap((jobSnapshot) => {
+          let jobDocRef;
           if (jobSnapshot.empty) {
-            return throwError(() => ({ status: 404, message: 'Job not found for order' }));
+            // Fallback: try finding any job assigned to this worker for this order
+            const fallbackQ = query(jobsRef, where('orderId', '==', orderId), where('assignedWorkerId', '==', uid), limit(1));
+            return from(getDocs(fallbackQ)).pipe(
+              switchMap((fallbackSnap) => {
+                if (fallbackSnap.empty) {
+                  return throwError(() => ({ status: 404, message: 'Job not found for order' }));
+                }
+                return this.doCompleteDelivery(fallbackSnap.docs[0].id, orderId);
+              })
+            );
           }
-          const jobId = jobSnapshot.docs[0].id;
-          const jobDocRef = doc(this.db, 'jobs', jobId);
-          return from(
-            updateDoc(jobDocRef, {
-              status: 'delivered',
-              completedAt: Timestamp.now(),
-            })
-          ).pipe(
-            switchMap(() => {
-              // Update all sub-orders with this parentOrderId to 'delivered'
-              const ordersRef = collection(this.db, 'orders');
-              const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
-              return from(getDocs(orderQuery)).pipe(
-                switchMap((orderSnapshot) => {
-                  if (orderSnapshot.empty) {
-                    // Try direct update (single-store order where orderId IS the doc ID)
-                    return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }).catch(() => {}));
-                  }
-                  // Update all sub-orders
-                  const updates = orderSnapshot.docs.map(d =>
-                    updateDoc(doc(this.db, 'orders', d.id), { status: 'delivered' })
-                  );
-                  return from(Promise.all(updates).then(() => {}));
-                })
-              );
-            })
-          );
+          return this.doCompleteDelivery(jobSnapshot.docs[0].id, orderId);
         })
       );
     });
+  }
+
+  private doCompleteDelivery(jobId: string, orderId: string): Observable<void> {
+    const jobDocRef = doc(this.db, 'jobs', jobId);
+    return from(
+      updateDoc(jobDocRef, {
+        status: 'delivered',
+        completedAt: Timestamp.now(),
+      })
+    ).pipe(
+      switchMap(() => {
+        // Also mark the shopper job as delivered
+        const shopperJobId = `job_${orderId}_shopper`;
+        updateDoc(doc(this.db, 'jobs', shopperJobId), { status: 'delivered', completedAt: Timestamp.now() }).catch(() => {});
+
+        // Update all sub-orders with this parentOrderId to 'delivered'
+        const ordersRef = collection(this.db, 'orders');
+        const orderQuery = query(ordersRef, where('parentOrderId', '==', orderId));
+        return from(getDocs(orderQuery)).pipe(
+          switchMap((orderSnapshot) => {
+            if (orderSnapshot.empty) {
+              // Try direct update (single-store order where orderId IS the doc ID)
+              return from(updateDoc(doc(this.db, 'orders', orderId), { status: 'delivered' }).catch(() => {}));
+            }
+            // Update all sub-orders
+            const updates = orderSnapshot.docs.map(d =>
+              updateDoc(doc(this.db, 'orders', d.id), { status: 'delivered' })
+            );
+            return from(Promise.all(updates).then(() => {}));
+          })
+        );
+      })
+    );
   }
 
   cancelActiveJob(jobId: string): Observable<void> {

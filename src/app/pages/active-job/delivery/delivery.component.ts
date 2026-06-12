@@ -133,28 +133,62 @@ export class DeliveryComponent implements OnInit, OnDestroy {
 
   /**
    * Dispatches completeDelivery action to the store.
+   * Validates delivery PIN against the stored order PIN first.
    * Requirement: 9.3, 9.4, 9.5
    */
-  onCompleteDelivery(): void {
+  async onCompleteDelivery(): Promise<void> {
     if (this.completing()) {
       return;
     }
 
-    // Verify PIN
+    // Verify PIN length
     if (this.enteredPin.length < 4) {
       this.pinError = 'Please enter the 4-digit delivery PIN from the customer';
       return;
     }
 
-    // PIN verification happens against the order's stored PIN
-    // For now, we trust the PIN is correct and let the backend/Firestore validate
-    // (In a full implementation, the completeDelivery service would check the PIN server-side)
+    // Validate PIN against order's stored PIN
     this.pinError = '';
     this.completing.set(true);
     this.error.set(null);
-    this.store.dispatch(
-      ActiveJobActions.completeDelivery({ orderId: this.job.orderId })
-    );
+
+    try {
+      const { getFirestore, collection, query, where, getDocs, doc, getDoc } = await import('firebase/firestore');
+      const { getApp } = await import('firebase/app');
+      const db = getFirestore(getApp());
+
+      // Find the order(s) to validate PIN
+      const ordersRef = collection(db, 'orders');
+      const orderQuery = query(ordersRef, where('parentOrderId', '==', this.job.orderId));
+      let storedPin = '';
+
+      const snapshot = await getDocs(orderQuery);
+      if (!snapshot.empty) {
+        storedPin = snapshot.docs[0].data()['deliveryPin'] || '';
+      } else {
+        // Try direct order doc
+        const orderDoc = await getDoc(doc(db, 'orders', this.job.orderId));
+        if (orderDoc.exists()) {
+          storedPin = orderDoc.data()['deliveryPin'] || '';
+        }
+      }
+
+      if (storedPin && this.enteredPin !== storedPin) {
+        this.pinError = 'Incorrect PIN. Please ask the customer for the correct delivery PIN.';
+        this.completing.set(false);
+        return;
+      }
+
+      // PIN matches (or no PIN stored — allow completion)
+      this.store.dispatch(
+        ActiveJobActions.completeDelivery({ orderId: this.job.orderId })
+      );
+    } catch (err) {
+      // If PIN check fails due to network, allow completion anyway
+      this.store.dispatch(
+        ActiveJobActions.completeDelivery({ orderId: this.job.orderId })
+      );
+    }
   }
 
   /**
