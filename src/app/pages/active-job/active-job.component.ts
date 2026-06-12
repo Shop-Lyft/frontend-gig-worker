@@ -8,7 +8,7 @@ import {
   selectActiveJobType,
   selectActiveJobLoading,
 } from '../../store/active-job/active-job.selectors';
-import { loadActiveJob } from '../../store/active-job/active-job.actions';
+import { loadActiveJob, cancelActiveJob } from '../../store/active-job/active-job.actions';
 import { PicklistComponent } from './picklist/picklist.component';
 import { DeliveryComponent } from './delivery/delivery.component';
 
@@ -21,6 +21,7 @@ import { DeliveryComponent } from './delivery/delivery.component';
  * - Loading state while active job is being fetched
  * - No-active-job empty state with link back to Jobs
  * - Conditional routing to Picklist or Delivery based on job type
+ * - Cancel job button for stuck/test jobs
  *
  * Requirements: 7.1, 9.1
  */
@@ -40,5 +41,11 @@ export class ActiveJobComponent implements OnInit {
 
   ngOnInit(): void {
     this.store.dispatch(loadActiveJob());
+  }
+
+  onCancelJob(jobId: string): void {
+    if (confirm('Are you sure you want to cancel this job? This cannot be undone.')) {
+      this.store.dispatch(cancelActiveJob({ jobId }));
+    }
   }
 }

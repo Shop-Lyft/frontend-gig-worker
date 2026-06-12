@@ -98,5 +98,16 @@ export const substitutionResponse = createAction(
   props<{ response: SubstitutionResponse }>()
 );
 
+// Cancel/Abandon Job (for stuck test jobs)
+export const cancelActiveJob = createAction(
+  '[Active Job] Cancel Active Job',
+  props<{ jobId: string }>()
+);
+export const cancelActiveJobSuccess = createAction('[Active Job] Cancel Active Job Success');
+export const cancelActiveJobFailure = createAction(
+  '[Active Job] Cancel Active Job Failure',
+  props<{ error: string }>()
+);
+
 // Clear state on logout
 export const clearActiveJobState = createAction('[Active Job] Clear State');

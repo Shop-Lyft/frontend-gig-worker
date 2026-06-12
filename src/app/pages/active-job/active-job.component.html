@@ -15,6 +15,18 @@
         @if ((jobType$ | async) === 'driver') {
           <app-delivery [job]="activeJob" />
         }
+
+        <!-- Cancel/Abandon Job button (useful for stuck test jobs) -->
+        <div class="cancel-job-section">
+          <button
+            class="cancel-job-btn"
+            (click)="onCancelJob(activeJob.id)"
+            type="button"
+            aria-label="Cancel this job"
+          >
+            Cancel Job
+          </button>
+        </div>
       } @else {
         <!-- No active job empty state -->
         <div class="empty-state" role="status" aria-label="No active job">

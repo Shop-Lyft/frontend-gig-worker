@@ -30,6 +30,7 @@ export interface GigWorkerService {
   updatePickItemStatus(orderId: string, itemId: string, status: PickItemStatus): Observable<void>;
   markAllPicked(jobId: string): Observable<void>;
   completeDelivery(orderId: string): Observable<void>;
+  cancelActiveJob(jobId: string): Observable<void>;
 
   // Substitution
   proposeSubstitution(orderId: string, itemId: string, sub: SubstitutionProposal): Observable<void>;

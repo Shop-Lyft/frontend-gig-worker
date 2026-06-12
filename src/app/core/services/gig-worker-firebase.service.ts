@@ -481,6 +481,18 @@ export class GigWorkerFirebaseService implements GigWorkerService {
     });
   }
 
+  cancelActiveJob(jobId: string): Observable<void> {
+    return this.withCurrentUser((_uid) => {
+      const jobDocRef = doc(this.db, 'jobs', jobId);
+      return from(
+        updateDoc(jobDocRef, {
+          status: 'cancelled',
+          cancelledAt: Timestamp.now(),
+        })
+      );
+    });
+  }
+
   // --- Substitution ---
 
   proposeSubstitution(orderId: string, itemId: string, sub: SubstitutionProposal): Observable<void> {
@@ -852,6 +864,9 @@ export class GigWorkerFirebaseService implements GigWorkerService {
     return {
       id,
       productName: data['productName'] || '',
+      brand: data['brand'] || '',
+      size: data['size'] || '',
+      imageUrl: data['imageUrl'] || '',
       quantity: data['quantity'] || 1,
       status: data['status'] || 'pending',
       checkedAt: data['checkedAt']

@@ -118,6 +118,12 @@ export class GigWorkerRestService implements GigWorkerService {
       .pipe(catchError(this.handleError));
   }
 
+  cancelActiveJob(jobId: string): Observable<void> {
+    return this.http
+      .post<void>(`${this.baseUrl}/gig/jobs/${jobId}/cancel`, {})
+      .pipe(catchError(this.handleError));
+  }
+
   // --- Substitution ---
 
   proposeSubstitution(orderId: string, itemId: string, sub: SubstitutionProposal): Observable<void> {

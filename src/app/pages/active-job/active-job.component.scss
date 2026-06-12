@@ -86,3 +86,32 @@
     .back-link:hover {
       background: #059669;
     }
+
+    .cancel-job-section {
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      margin-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .cancel-job-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 24px;
+      background: transparent;
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .cancel-job-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }

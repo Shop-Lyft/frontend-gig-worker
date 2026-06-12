@@ -108,6 +108,25 @@ export const activeJobReducer = createReducer(
     error: { message: error, timestamp: Date.now() },
   })),
 
+  // Cancel Active Job
+  on(ActiveJobActions.cancelActiveJob, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(ActiveJobActions.cancelActiveJobSuccess, (state) => ({
+    ...state,
+    data: null,
+    loading: false,
+    picklist: null,
+    substitutions: {},
+  })),
+  on(ActiveJobActions.cancelActiveJobFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error: { message: error, timestamp: Date.now() },
+  })),
+
   // Propose Substitution
   on(ActiveJobActions.proposeSubstitutionSuccess, (state, { itemId }) => ({
     ...state,

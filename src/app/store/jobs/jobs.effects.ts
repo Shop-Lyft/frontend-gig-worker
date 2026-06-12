@@ -64,10 +64,16 @@ export const acceptJobSuccessNavigateEffect = createEffect(
   (
     actions$ = inject(Actions),
     router = inject(Router),
+    store = inject(Store),
   ) => {
     return actions$.pipe(
       ofType(JobsActions.acceptJobSuccess),
-      tap(() => router.navigate(['/active']))
+      tap(({ job }) => {
+        // Immediately set the active job in the active-job store so the
+        // picklist page doesn't have to re-fetch and risk a race condition
+        store.dispatch({ type: '[Active Job] Load Active Job Success', job });
+        router.navigate(['/active']);
+      })
     );
   },
   { functional: true, dispatch: false }

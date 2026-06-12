@@ -79,6 +79,20 @@ export class ActiveJobEffects {
     )
   );
 
+  cancelActiveJob$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ActiveJobActions.cancelActiveJob),
+      switchMap(({ jobId }) =>
+        this.gigService.cancelActiveJob(jobId).pipe(
+          map(() => ActiveJobActions.cancelActiveJobSuccess()),
+          catchError((error) =>
+            of(ActiveJobActions.cancelActiveJobFailure({ error: error?.message || 'Failed to cancel job' }))
+          )
+        )
+      )
+    )
+  );
+
   proposeSubstitution$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ActiveJobActions.proposeSubstitution),
