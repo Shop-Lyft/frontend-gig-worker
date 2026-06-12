@@ -316,20 +316,52 @@ export class GigWorkerFirebaseService implements GigWorkerService {
                   snapshot.docs.map((docSnap) => this.mapPickItem(docSnap.id, docSnap.data()))
                 );
               }
-              // Fallback: read items directly from the order document
-              const orderDocRef = doc(this.db, 'orders', orderId);
-              return from(getDoc(orderDocRef)).pipe(
-                map((orderSnap) => {
-                  if (!orderSnap.exists()) return [];
-                  const orderData = orderSnap.data();
-                  const items: any[] = orderData['items'] || [];
-                  return items.map((item, index) => ({
-                    id: item.productId || `item_${index}`,
-                    productName: item.name || item.productName || 'Unknown Item',
-                    quantity: item.quantity || 1,
-                    status: 'pending' as const,
-                    checkedAt: undefined,
-                  }));
+
+              // Fallback 1: try reading from direct order document
+              return from(getDoc(doc(this.db, 'orders', orderId))).pipe(
+                switchMap((orderSnap) => {
+                  if (orderSnap.exists()) {
+                    const orderData = orderSnap.data();
+                    const items: any[] = orderData['items'] || [];
+                    if (items.length > 0) {
+                      return of(items.map((item, index) => ({
+                        id: item.productId || `item_${index}`,
+                        productName: item.name || item.productName || 'Unknown Item',
+                        brand: item.brand || '',
+                        size: item.size || '',
+                        imageUrl: item.imageUrl || '',
+                        quantity: item.quantity || 1,
+                        status: 'pending' as const,
+                        checkedAt: undefined,
+                      })));
+                    }
+                  }
+
+                  // Fallback 2: query sub-orders by parentOrderId and merge items
+                  const ordersRef = collection(this.db, 'orders');
+                  const subQ = query(ordersRef, where('parentOrderId', '==', orderId));
+                  return from(getDocs(subQ)).pipe(
+                    map((subSnap) => {
+                      const allItems: PickItem[] = [];
+                      subSnap.docs.forEach(d => {
+                        const data = d.data();
+                        const items: any[] = data['items'] || [];
+                        items.forEach((item, index) => {
+                          allItems.push({
+                            id: item.productId || `item_${d.id}_${index}`,
+                            productName: item.name || item.productName || 'Unknown Item',
+                            brand: item.brand || '',
+                            size: item.size || '',
+                            imageUrl: item.imageUrl || '',
+                            quantity: item.quantity || 1,
+                            status: 'pending' as const,
+                            checkedAt: undefined,
+                          });
+                        });
+                      });
+                      return allItems;
+                    })
+                  );
                 })
               );
             })
